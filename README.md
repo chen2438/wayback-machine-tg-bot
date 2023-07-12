@@ -62,6 +62,9 @@ Bot:
 存档版本位于: http://web.archive.org/web/20230712121858/https://icp.gov.moe/aboutus.php
 ```
 
-
-
 ![image-20230712201956247](https://media.opennet.top/i/2023/07/12/64ae9a6fa2010.png)
+
+## 提示
+
+- Wayback Machine 可能会对短时间内发起大量请求的 IP 地址进行封禁，请勿在一个 IP 地址上共享此服务。
+- 已知 知乎 已经拒绝被 Wayback Machine 存档。

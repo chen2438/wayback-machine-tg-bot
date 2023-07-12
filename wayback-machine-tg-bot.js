@@ -36,12 +36,21 @@ bot.on('message', (msg) => {
     http.get(waybackUrl, (res) => {
         let statusCode = res.statusCode;
 
+        // console.log(res.statusCode);
+        // res.on('data', (chunk) => {
+        //     console.log(chunk.toString());
+        // });
+        
         if (statusCode === 302) {
             // 如果成功触发了Wayback Machine的保存过程，发送一条消息并附上存档版本的URL
             bot.sendMessage(chatId, `成功触发了Wayback Machine的保存过程。\n存档版本位于: ${res.headers.location}`);
-        } else {
+        } 
+        else {
             // 如果保存失败，发送一条消息
             bot.sendMessage(chatId, `保存${urlToSave}到Wayback Machine失败。状态码: ${statusCode}`);
+            if(statusCode === 523){
+                bot.sendMessage(chatId, `源站不可达。这通常是因为Wayback Machine无法访问被存档的网站或网站拒绝被Wayback Machine存档。`);
+            }
         }
     }).on('error', (e) => {
         // 如果请求过程中发生错误，发送一条消息
