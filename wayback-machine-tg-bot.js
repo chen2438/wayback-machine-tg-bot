@@ -4,13 +4,9 @@ const http = require('http');
 const { format } = require('date-fns');
 const url = require('url');
 
-// 替换为你从@BotFather获得的Telegram bot的token
-let tg_token = process.env.tg_token;
-
-// 创建一个使用'polling'获取新更新的bot
+let tg_token = require('./config.js');
 const bot = new TelegramBot(tg_token, { polling: true });
 
-// 监听/start命令
 bot.onText(/\/start/, (msg) => {
     const chatId = msg.chat.id;
     bot.sendMessage(chatId, `欢迎使用 wayback-machine-tg-bot !\n使用方法:\n1. 发送一个网址给我。\n2. 我会尝试将这个网址保存到Wayback Machine。\n3. 如果成功，我会发送一个存档后的网址给你。`);
@@ -19,7 +15,6 @@ bot.onText(/\/start/, (msg) => {
 bot.on('message', (msg) => {
     const chatId = msg.chat.id;
     let urlToSave = msg.text;
-
     if (urlToSave === '/start') return;
 
     // 验证接收到的文本是否是一个有效的URL
