@@ -1,12 +1,14 @@
 const TelegramBot = require('node-telegram-bot-api');
+const puppeteer = require('puppeteer');
 const http = require('http');
+const { format } = require('date-fns');
 const url = require('url');
 
 // 替换为你从@BotFather获得的Telegram bot的token
-const tg_token = process.env.tg_token;
+let tg_token = process.env.tg_token;
 
 // 创建一个使用'polling'获取新更新的bot
-const bot = new TelegramBot(tg_token, {polling: true});
+const bot = new TelegramBot(tg_token, { polling: true });
 
 // 监听/start命令
 bot.onText(/\/start/, (msg) => {
@@ -18,10 +20,7 @@ bot.on('message', (msg) => {
     const chatId = msg.chat.id;
     let urlToSave = msg.text;
 
-    // 如果接收到的是/start命令，直接返回
-    if (urlToSave === '/start') {
-        return;
-    }
+    if (urlToSave === '/start') return;
 
     // 验证接收到的文本是否是一个有效的URL
     try {
@@ -35,25 +34,50 @@ bot.on('message', (msg) => {
 
     http.get(waybackUrl, (res) => {
         let statusCode = res.statusCode;
-
-        // console.log(res.statusCode);
-        // res.on('data', (chunk) => {
-        //     console.log(chunk.toString());
-        // });
-        
         if (statusCode === 302) {
-            // 如果成功触发了Wayback Machine的保存过程，发送一条消息并附上存档版本的URL
             bot.sendMessage(chatId, `成功触发了Wayback Machine的保存过程。\n存档版本位于: ${res.headers.location}`);
-        } 
+        }
         else {
-            // 如果保存失败，发送一条消息
             bot.sendMessage(chatId, `保存 ${urlToSave} 到Wayback Machine失败。状态码: ${statusCode}`);
-            if(statusCode === 523){
+            if (statusCode === 523) {
                 bot.sendMessage(chatId, `源站不可达。这通常是因为Wayback Machine无法访问被存档的网站或网站拒绝被Wayback Machine存档。`);
             }
         }
     }).on('error', (e) => {
-        // 如果请求过程中发生错误，发送一条消息
         bot.sendMessage(chatId, `发生错误：${e.message}`);
     });
+    async function printPDF() {
+        try {
+            const browser = await puppeteer.launch({ headless: "new" });
+            const page = await browser.newPage();
+
+            //await page.setViewport({ width: 375, height: 812 });
+            await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36 Edg/114.0.1823.67');
+
+            await page.goto(urlToSave, { waitUntil: 'networkidle0', timeout: 60000 });
+
+            const pdf = await page.pdf({
+                format: 'A4',
+                landscape: true,
+                printBackground: true,
+            });
+
+            await browser.close();
+            return pdf;
+        } catch (error) {
+            bot.sendMessage(chatId, `打印PDF时发生错误:${error}`);
+            throw error;
+        }
+    }
+
+    printPDF().then(pdf => {
+        const urlObj = new URL(urlToSave);
+        const domain = urlObj.hostname;
+        const dateStr = format(new Date(), 'yyyyMMddHHmmss');
+        const filename = `${domain}.${dateStr}.pdf`;
+        bot.sendDocument(chatId, pdf, {}, { filename: filename });
+    }).catch(error => {
+        bot.sendMessage(chatId, `发送PDF时发生错误:${error}`);
+    });
+
 });
