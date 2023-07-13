@@ -47,7 +47,7 @@ bot.on('message', (msg) => {
         } 
         else {
             // 如果保存失败，发送一条消息
-            bot.sendMessage(chatId, `保存${urlToSave}到Wayback Machine失败。状态码: ${statusCode}`);
+            bot.sendMessage(chatId, `保存 ${urlToSave} 到Wayback Machine失败。状态码: ${statusCode}`);
             if(statusCode === 523){
                 bot.sendMessage(chatId, `源站不可达。这通常是因为Wayback Machine无法访问被存档的网站或网站拒绝被Wayback Machine存档。`);
             }
